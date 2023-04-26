@@ -1496,24 +1496,24 @@ gulp.task("jsdoc", function (done) {
   });
 });
 
-gulp.task("types", function (done) {
-  console.log("### Generating TypeScript definitions using `tsc`");
-  const args = [
-    "target ESNext",
-    "allowJS",
-    "declaration",
-    `outDir ${TYPES_DIR}`,
-    "strict",
-    "esModuleInterop",
-    "forceConsistentCasingInFileNames",
-    "emitDeclarationOnly",
-    "moduleResolution node",
-  ].join(" --");
-  exec(
-    `"node_modules/.bin/tsc" --${args} src/pdf.js web/pdf_viewer.component.js`,
-    done
-  );
-});
+gulp.task(
+  "types",
+  gulp.series(createBuildNumber, function (done) {
+    console.log("### Generating TypeScript definitions using `tsc`");
+    const args = [
+      "target ESNext",
+      "allowJS",
+      "declaration",
+      `outDir ${TYPES_DIR}`,
+      "strict",
+      "esModuleInterop",
+      "forceConsistentCasingInFileNames",
+      "emitDeclarationOnly",
+      "moduleResolution node",
+    ].join(" --");
+    exec(`"node_modules/.bin/tsc" --${args} src/pdf.js`, done);
+  })
+);
 
 function buildLibHelper(bundleDefines, inputStream, outputDir) {
   // When we create a bundle, webpack is run on the source and it will replace
@@ -2227,15 +2227,15 @@ function packageJson() {
 gulp.task(
   "dist-pre",
   gulp.series(
-    "generic",
-    "generic-legacy",
-    "components",
-    "components-legacy",
-    "image_decoders",
-    "image_decoders-legacy",
-    "lib",
-    "minified",
-    "minified-legacy",
+    // "generic",
+    // "generic-legacy",
+    // "components",
+    // "components-legacy",
+    // "image_decoders",
+    // "image_decoders-legacy",
+    // "lib",
+    // "minified",
+    // "minified-legacy",
     "types",
     function createDist() {
       console.log();
@@ -2243,7 +2243,7 @@ gulp.task(
 
       rimraf.sync(DIST_DIR);
       mkdirp.sync(DIST_DIR);
-      safeSpawnSync("git", ["clone", "--depth", "1", DIST_REPO_URL, DIST_DIR]);
+      // safeSpawnSync("git", ["clone", "--depth", "1", DIST_REPO_URL, DIST_DIR]);
 
       console.log();
       console.log("### Overwriting all files");
@@ -2251,85 +2251,99 @@ gulp.task(
 
       return merge([
         packageJson().pipe(gulp.dest(DIST_DIR)),
-        vfs
-          .src("external/dist/**/*", { base: "external/dist", stripBOM: false })
-          .pipe(gulp.dest(DIST_DIR)),
-        gulp.src(GENERIC_DIR + "LICENSE").pipe(gulp.dest(DIST_DIR)),
-        gulp
-          .src(GENERIC_DIR + "web/cmaps/**/*", { base: GENERIC_DIR + "web" })
-          .pipe(gulp.dest(DIST_DIR)),
-        gulp
-          .src(GENERIC_DIR + "web/standard_fonts/**/*", {
-            base: GENERIC_DIR + "web",
-          })
-          .pipe(gulp.dest(DIST_DIR)),
-        gulp
-          .src([
-            GENERIC_DIR + "build/{pdf,pdf.worker,pdf.sandbox}.js",
-            GENERIC_DIR + "build/{pdf,pdf.worker,pdf.sandbox}.js.map",
-            SRC_DIR + "pdf.worker.entry.js",
-          ])
-          .pipe(gulp.dest(DIST_DIR + "build/")),
-        gulp
-          .src([
-            GENERIC_LEGACY_DIR + "build/{pdf,pdf.worker,pdf.sandbox}.js",
-            GENERIC_LEGACY_DIR + "build/{pdf,pdf.worker,pdf.sandbox}.js.map",
-            SRC_DIR + "pdf.worker.entry.js",
-          ])
-          .pipe(gulp.dest(DIST_DIR + "legacy/build/")),
-        gulp
-          .src(MINIFIED_DIR + "build/pdf.js")
-          .pipe(rename("pdf.min.js"))
-          .pipe(gulp.dest(DIST_DIR + "build/")),
-        gulp
-          .src(MINIFIED_DIR + "build/pdf.worker.js")
-          .pipe(rename("pdf.worker.min.js"))
-          .pipe(gulp.dest(DIST_DIR + "build/")),
-        gulp
-          .src(MINIFIED_DIR + "build/pdf.sandbox.js")
-          .pipe(rename("pdf.sandbox.min.js"))
-          .pipe(gulp.dest(DIST_DIR + "build/")),
-        gulp
-          .src(MINIFIED_DIR + "image_decoders/pdf.image_decoders.js")
-          .pipe(rename("pdf.image_decoders.min.js"))
-          .pipe(gulp.dest(DIST_DIR + "image_decoders/")),
-        gulp
-          .src(MINIFIED_LEGACY_DIR + "build/pdf.js")
-          .pipe(rename("pdf.min.js"))
-          .pipe(gulp.dest(DIST_DIR + "legacy/build/")),
-        gulp
-          .src(MINIFIED_LEGACY_DIR + "build/pdf.worker.js")
-          .pipe(rename("pdf.worker.min.js"))
-          .pipe(gulp.dest(DIST_DIR + "legacy/build/")),
-        gulp
-          .src(MINIFIED_LEGACY_DIR + "build/pdf.sandbox.js")
-          .pipe(rename("pdf.sandbox.min.js"))
-          .pipe(gulp.dest(DIST_DIR + "legacy/build/")),
-        gulp
-          .src(MINIFIED_LEGACY_DIR + "image_decoders/pdf.image_decoders.js")
-          .pipe(rename("pdf.image_decoders.min.js"))
-          .pipe(gulp.dest(DIST_DIR + "legacy/image_decoders/")),
-        gulp
-          .src(COMPONENTS_DIR + "**/*", { base: COMPONENTS_DIR })
-          .pipe(gulp.dest(DIST_DIR + "web/")),
-        gulp
-          .src(COMPONENTS_LEGACY_DIR + "**/*", { base: COMPONENTS_LEGACY_DIR })
-          .pipe(gulp.dest(DIST_DIR + "legacy/web/")),
-        gulp
-          .src(IMAGE_DECODERS_DIR + "**/*", { base: IMAGE_DECODERS_DIR })
-          .pipe(gulp.dest(DIST_DIR + "image_decoders/")),
-        gulp
-          .src(IMAGE_DECODERS_LEGACY_DIR + "**/*", {
-            base: IMAGE_DECODERS_LEGACY_DIR,
-          })
-          .pipe(gulp.dest(DIST_DIR + "legacy/image_decoders/")),
-        gulp
-          .src(LIB_DIR + "**/*", { base: LIB_DIR })
-          .pipe(gulp.dest(DIST_DIR + "lib/")),
+        // vfs
+        //   .src("external/dist/**/*", { base: "external/dist", stripBOM: false })
+        //   .pipe(gulp.dest(DIST_DIR)),
+        // gulp.src(GENERIC_DIR + "LICENSE").pipe(gulp.dest(DIST_DIR)),
+        // gulp
+        //   .src(GENERIC_DIR + "web/cmaps/**/*", { base: GENERIC_DIR + "web" })
+        //   .pipe(gulp.dest(DIST_DIR)),
+        // gulp
+        //   .src(GENERIC_DIR + "web/standard_fonts/**/*", {
+        //     base: GENERIC_DIR + "web",
+        //   })
+        //   .pipe(gulp.dest(DIST_DIR)),
+        // gulp
+        //   .src([
+        //     GENERIC_DIR + "build/{pdf,pdf.worker,pdf.sandbox}.js",
+        //     GENERIC_DIR + "build/{pdf,pdf.worker,pdf.sandbox}.js.map",
+        //     SRC_DIR + "pdf.worker.entry.js",
+        //   ])
+        //   .pipe(gulp.dest(DIST_DIR + "build/")),
+        // gulp
+        //   .src([
+        //     GENERIC_LEGACY_DIR + "build/{pdf,pdf.worker,pdf.sandbox}.js",
+        //     GENERIC_LEGACY_DIR + "build/{pdf,pdf.worker,pdf.sandbox}.js.map",
+        //     SRC_DIR + "pdf.worker.entry.js",
+        //   ])
+        //   .pipe(gulp.dest(DIST_DIR + "legacy/build/")),
+        // gulp
+        //   .src(MINIFIED_DIR + "build/pdf.js")
+        //   .pipe(rename("pdf.min.js"))
+        //   .pipe(gulp.dest(DIST_DIR + "build/")),
+        // gulp
+        //   .src(MINIFIED_DIR + "build/pdf.worker.js")
+        //   .pipe(rename("pdf.worker.min.js"))
+        //   .pipe(gulp.dest(DIST_DIR + "build/")),
+        // gulp
+        //   .src(MINIFIED_DIR + "build/pdf.sandbox.js")
+        //   .pipe(rename("pdf.sandbox.min.js"))
+        //   .pipe(gulp.dest(DIST_DIR + "build/")),
+        // gulp
+        //   .src(MINIFIED_DIR + "image_decoders/pdf.image_decoders.js")
+        //   .pipe(rename("pdf.image_decoders.min.js"))
+        //   .pipe(gulp.dest(DIST_DIR + "image_decoders/")),
+        // gulp
+        //   .src(MINIFIED_LEGACY_DIR + "build/pdf.js")
+        //   .pipe(rename("pdf.min.js"))
+        //   .pipe(gulp.dest(DIST_DIR + "legacy/build/")),
+        // gulp
+        //   .src(MINIFIED_LEGACY_DIR + "build/pdf.worker.js")
+        //   .pipe(rename("pdf.worker.min.js"))
+        //   .pipe(gulp.dest(DIST_DIR + "legacy/build/")),
+        // gulp
+        //   .src(MINIFIED_LEGACY_DIR + "build/pdf.sandbox.js")
+        //   .pipe(rename("pdf.sandbox.min.js"))
+        //   .pipe(gulp.dest(DIST_DIR + "legacy/build/")),
+        // gulp
+        //   .src(MINIFIED_LEGACY_DIR + "image_decoders/pdf.image_decoders.js")
+        //   .pipe(rename("pdf.image_decoders.min.js"))
+        //   .pipe(gulp.dest(DIST_DIR + "legacy/image_decoders/")),
+        // gulp
+        //   .src(COMPONENTS_DIR + "**/*", { base: COMPONENTS_DIR })
+        //   .pipe(gulp.dest(DIST_DIR + "web/")),
+        // gulp
+        //   .src(COMPONENTS_LEGACY_DIR + "**/*", { base: COMPONENTS_LEGACY_DIR })
+        //   .pipe(gulp.dest(DIST_DIR + "legacy/web/")),
+        // gulp
+        //   .src(IMAGE_DECODERS_DIR + "**/*", { base: IMAGE_DECODERS_DIR })
+        //   .pipe(gulp.dest(DIST_DIR + "image_decoders/")),
+        // gulp
+        //   .src(IMAGE_DECODERS_LEGACY_DIR + "**/*", {
+        //     base: IMAGE_DECODERS_LEGACY_DIR,
+        //   })
+        //   .pipe(gulp.dest(DIST_DIR + "legacy/image_decoders/")),
+        // gulp
+        //   .src(LIB_DIR + "**/*", { base: LIB_DIR })
+        //   .pipe(gulp.dest(DIST_DIR + "lib/")),
         gulp
           .src(TYPES_DIR + "**/*", { base: TYPES_DIR })
           .pipe(gulp.dest(DIST_DIR + "types/")),
       ]);
+    },
+    async function rollup() {
+      const rollup_config = await import("./rollup.config.mjs");
+      const rollup = await import("rollup");
+
+      const bundle = await rollup.rollup(rollup_config.default);
+
+      await bundle.write({
+        dir: DIST_DIR + "build",
+        format: "es",
+        minifyInternalExports: false,
+        sourcemap: false,
+        preserveModules: true,
+      });
     }
   )
 );

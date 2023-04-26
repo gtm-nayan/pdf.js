@@ -295,83 +295,73 @@ function traverseTree(ctx, node) {
 }
 
 /**
- * @type {import("rollup").RollupOptions[]}
+ * @type {import("rollup").RollupOptions}
  */
-export default [
-  {
-    input: {
-      pdf: "src/pdf.js",
-      "pdf.worker": "src/pdf.worker.js",
-    },
-    output: {
-      dir: "ciri",
-      format: "es",
-      minifyInternalExports: false,
-      sourcemap: false,
-      preserveModules: true,
-    },
-    external: ["canvas", ...builtinModules],
-    plugins: [
-      {
-        name: "ciri",
-        async resolveId(id, importer) {
-          if (id === "pdfjs/pdf.worker.js") {
-            return {
-              id: __dirname + "/src/pdf.worker.js",
-              external: true,
-            };
-          } else {
-            if (id === "pdfjs-fitCurve") {
-              return {
-                id: __dirname + "/src/display/editor/fit_curve.js",
-                moduleSideEffects: false,
-              };
-            } else if (/pdfjs(\/)?.+/.test(id)) {
-              return (
-                __dirname + ("/src/" + id.replace(/pdfjs(\/)?/, "") + ".js")
-              );
-            }
-          }
-        },
-        async transform(code, id) {
-          if (!id.startsWith(__dirname + "/src")) return;
-
-          const ctx = {
-            defines: {
-              SKIP_BABEL: true,
-              TESTING: false,
-              // The main build targets:
-              GENERIC: true,
-              MOZCENTRAL: false,
-              GECKOVIEW: false,
-              CHROME: false,
-              MINIFIED: false,
-              COMPONENTS: false,
-              LIB: false,
-              IMAGE_DECODERS: false,
-              BUNDLE_VERSION: "ciri-custom",
-              BUNDLE_BUILD: "ciri-custom",
-            },
-            skipComments: true,
-          };
-
-          let ast = this.parse(code);
-          ast = traverseTree(ctx, ast);
-
-          const { print } = await import("code-red");
-          code = print(ast).code;
-
-          return code;
-        },
-      },
-      nodeResolve({
-        preferBuiltins: true,
-      }),
-      commonjs({
-        transformMixedEsModules: true,
-        strictRequires: true,
-        ignoreDynamicRequires: true,
-      }),
-    ],
+export default {
+  input: {
+    pdf: "src/pdf.js",
+    "pdf.worker": "src/pdf.worker.js",
   },
-];
+  external: ["canvas", ...builtinModules],
+  plugins: [
+    {
+      name: "ciri",
+      async resolveId(id, importer) {
+        if (id === "pdfjs/pdf.worker.js") {
+          return {
+            id: __dirname + "/src/pdf.worker.js",
+            external: true,
+          };
+        } else {
+          if (id === "pdfjs-fitCurve") {
+            return {
+              id: __dirname + "/src/display/editor/fit_curve.js",
+              moduleSideEffects: false,
+            };
+          } else if (/pdfjs(\/)?.+/.test(id)) {
+            return __dirname + ("/src/" + id.replace(/pdfjs(\/)?/, "") + ".js");
+          }
+        }
+      },
+      async transform(code, id) {
+        if (!id.startsWith(__dirname + "/src")) return;
+
+        const ctx = {
+          defines: {
+            SKIP_BABEL: true,
+            TESTING: false,
+            // The main build targets:
+            GENERIC: true,
+            MOZCENTRAL: false,
+            GECKOVIEW: false,
+            CHROME: false,
+            MINIFIED: false,
+            COMPONENTS: false,
+            LIB: false,
+            IMAGE_DECODERS: false,
+            BUNDLE_VERSION: "ciri-custom",
+            BUNDLE_BUILD: "ciri-custom",
+          },
+          skipComments: true,
+        };
+
+        let ast = this.parse(code);
+        ast = traverseTree(ctx, ast);
+
+        const { print } = await import("code-red");
+        code = print(ast).code;
+
+        return code;
+      },
+    },
+    nodeResolve({
+      preferBuiltins: true,
+    }),
+    commonjs({
+      transformMixedEsModules: true,
+      strictRequires: true,
+      ignoreDynamicRequires: true,
+      ignore: ["canvas"],
+    }),
+  ],
+};

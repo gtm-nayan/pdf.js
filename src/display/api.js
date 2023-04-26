@@ -2036,11 +2036,14 @@ if (typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")) {
  * thread to the worker thread and vice versa. If the creation of a web
  * worker is not possible, a "fake" worker will be used instead.
  *
- * @param {PDFWorkerParameters} params - The worker initialization parameters.
+ * 
  */
 class PDFWorker {
   static #workerPorts = new WeakMap();
 
+  /**
+   * @param {PDFWorkerParameters} params - The worker initialization parameters.
+   */
   constructor({
     name = null,
     port = null,
@@ -2276,6 +2279,7 @@ class PDFWorker {
 
   /**
    * @param {PDFWorkerParameters} params - The worker initialization parameters.
+   * @returns {PDFWorker}
    */
   static fromPort(params) {
     if (!params?.port) {
