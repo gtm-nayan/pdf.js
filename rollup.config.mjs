@@ -1,15 +1,17 @@
-"use strict";
-
-const acorn = require("acorn");
-const vm = require("vm");
-const fs = require("fs");
-const path = require("path");
-const { default: nodeResolve } = require("@rollup/plugin-node-resolve");
-const { default: commonjs } = require("@rollup/plugin-commonjs");
+import * as acorn from "acorn";
+import vm from "vm";
+import fs from "fs";
+import path from "path";
+import nodeResolve from "@rollup/plugin-node-resolve";
+import commonjs from "@rollup/plugin-commonjs";
+import { builtinModules } from "module";
 
 const PDFJS_PREPROCESSOR_NAME = "PDFJSDev";
 const ROOT_PREFIX = "$ROOT/";
 const ACORN_ECMA_VERSION = 2022;
+
+const __filename = new URL(import.meta.url).pathname;
+const __dirname = path.dirname(__filename);
 
 function isLiteral(obj, value) {
   return obj.type === "Literal" && obj.value === value;
@@ -295,7 +297,7 @@ function traverseTree(ctx, node) {
 /**
  * @type {import("rollup").RollupOptions[]}
  */
-module.exports = [
+export default [
   {
     input: {
       pdf: "src/pdf.js",
@@ -308,7 +310,7 @@ module.exports = [
       sourcemap: false,
       preserveModules: true,
     },
-    external: ["canvas", ...require("node:module").builtinModules],
+    external: ["canvas", ...builtinModules],
     plugins: [
       {
         name: "ciri",
@@ -325,13 +327,15 @@ module.exports = [
                 moduleSideEffects: false,
               };
             } else if (/pdfjs(\/)?.+/.test(id)) {
-              return __dirname + ("/src/" + id.replace("pdfjs/", "") + ".js");
+              return (
+                __dirname + ("/src/" + id.replace(/pdfjs(\/)?/, "") + ".js")
+              );
             }
           }
         },
         async transform(code, id) {
-          if (!id.startsWith("/home/ciri/personal/pdf.js/src")) return;
-          console.log(id, "started");
+          if (!id.startsWith(__dirname + "/src")) return;
+
           const ctx = {
             defines: {
               SKIP_BABEL: true,
