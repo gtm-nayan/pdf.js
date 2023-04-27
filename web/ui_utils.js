@@ -663,25 +663,18 @@ function isPortraitOrientation(size) {
  * Promise that is resolved when DOM window becomes visible.
  */
 const animationStarted = /* @__PURE__ */ new Promise(function (resolve) {
-  if (
-    typeof PDFJSDev !== "undefined" &&
-    PDFJSDev.test("LIB") &&
-    typeof window === "undefined"
-  ) {
-    // Prevent "ReferenceError: window is not defined" errors when running the
-    // unit-tests in Node.js environments.
-    setTimeout(resolve, 20);
-    return;
+  if (globalThis.requestAnimationFrame) {
+    globalThis.requestAnimationFrame(resolve);
+  } else {
+    setTimeout(resolve, 20); // Fallback if rAF isn't supported.
   }
-  window.requestAnimationFrame(resolve);
 });
 
-const docStyle = /* @__PURE__ */
-  typeof PDFJSDev !== "undefined" &&
-  PDFJSDev.test("LIB") &&
+const docStyle =
+  (typeof PDFJSDev !== "undefined" && PDFJSDev.test("LIB")) ||
   typeof document === "undefined"
     ? null
-    : document.documentElement.style;
+    : /* @__PURE__ */ document.documentElement.style;
 
 function clamp(v, min, max) {
   return Math.min(Math.max(v, min), max);
