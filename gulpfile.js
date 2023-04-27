@@ -1511,7 +1511,10 @@ gulp.task(
       "emitDeclarationOnly",
       "moduleResolution node",
     ].join(" --");
-    exec(`"node_modules/.bin/tsc" --${args} src/pdf.js`, done);
+    exec(
+      `"node_modules/.bin/tsc" --${args} src/pdf.js web/pdf_viewer.component.js`,
+      done
+    );
   })
 );
 
@@ -2340,12 +2343,32 @@ gulp.task(
       const bundle = await rollup.rollup(rollup_config.default);
 
       await bundle.write({
-        dir: DIST_DIR + "build",
+        dir: DIST_DIR,
         format: "es",
         minifyInternalExports: false,
         sourcemap: false,
-        preserveModules: true,
+        chunkFileNames: "chunks/[name]-[hash].js",
+        entryFileNames: entry => {
+          if (entry.name === "pdf") {
+            return "build/pdf.js";
+          } else if (entry.name === "pdf.worker") {
+            return "build/pdf.worker.js";
+          } else if (entry.name === "web/pdf_viewer.component") {
+            return "web/pdf_viewer.coponent.js";
+          }
+        },
       });
+    },
+    async function copy_css() {
+      return preprocessCSS("web/pdf_viewer.css", {
+        COMPONENTS: true,
+        GENERIC: true,
+        MOZCENTRAL: false,
+      })
+        .pipe(
+          postcss([postcssDirPseudoClass(), autoprefixer(AUTOPREFIXER_CONFIG)])
+        )
+        .pipe(gulp.dest(DIST_DIR + "web"));
     }
   )
 );

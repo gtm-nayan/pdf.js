@@ -662,7 +662,7 @@ function isPortraitOrientation(size) {
 /**
  * Promise that is resolved when DOM window becomes visible.
  */
-const animationStarted = new Promise(function (resolve) {
+const animationStarted = /* @__PURE__ */ new Promise(function (resolve) {
   if (
     typeof PDFJSDev !== "undefined" &&
     PDFJSDev.test("LIB") &&
@@ -676,7 +676,7 @@ const animationStarted = new Promise(function (resolve) {
   window.requestAnimationFrame(resolve);
 });
 
-const docStyle =
+const docStyle = /* @__PURE__ */
   typeof PDFJSDev !== "undefined" &&
   PDFJSDev.test("LIB") &&
   typeof document === "undefined"

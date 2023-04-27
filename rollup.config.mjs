@@ -301,12 +301,16 @@ export default {
   input: {
     pdf: "src/pdf.js",
     "pdf.worker": "src/pdf.worker.js",
+    "web/pdf_viewer.component": "web/pdf_viewer.component.js",
   },
   external: ["canvas", ...builtinModules],
   plugins: [
     {
       name: "ciri",
       async resolveId(id, importer) {
+        if (id === "pdfjs-lib") {
+          return __dirname + "/src/pdf.js";
+        }
         if (id === "pdfjs/pdf.worker.js") {
           return {
             id: __dirname + "/src/pdf.worker.js",
@@ -324,7 +328,7 @@ export default {
         }
       },
       async transform(code, id) {
-        if (!id.startsWith(__dirname + "/src")) return;
+        if (!id.startsWith(__dirname + "/src") && !id.startsWith(__dirname + "/web")) return;
 
         const ctx = {
           defines: {
